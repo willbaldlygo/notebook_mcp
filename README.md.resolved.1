@@ -24,16 +24,26 @@ pip install -r requirements.txt
 playwright install chromium
 ```
 
-### 2. Authentication (Manual Cookie Export)
-Since Google's security prevents automated headless logins, you must export your cookies:
+### 2. Authentication
+You have two options to authenticate. The **Direct Login** method is recommended as it's more durable.
 
-1.  Log in to [NotebookLM](https://notebooklm.google.com/) in your regular Chrome browser.
-2.  Open **DevTools** (Right-click -> Inspect) -> **Application** -> **Cookies**.
-3.  Select `https://notebooklm.google.com`.
-4.  Select all cookies (Cmd/Ctrl+A) and Copy (Cmd/Ctrl+C).
-5.  Paste them into `notebooklm_cookies.json` in this directory.
+#### Option A: Direct Login (Recommended)
+This runs the browser visibly so you can log in once. The session is saved to `chrome_profile_mcp/`.
 
-> **Note**: Your `notebooklm_cookies.json` is git-ignored by default. Never commit it!
+1.  Run the client in visible mode:
+    ```bash
+    python3 notebooklm_client.py --url "https://notebooklm.google.com" --question "init" --visible
+    ```
+2.  A Chromium window will open.
+3.  **Log in to Google** inside that window.
+4.  Once you see your notebooks, close the window.
+5.  Future runs (headless) will use this saved profile.
+
+#### Option B: Manual Cookie Export (Fallback)
+If Option A fails (e.g. headless detection), export your cookies from Chrome:
+1.  Log in to [NotebookLM](https://notebooklm.google.com/).
+2.  Open **DevTools** -> **Application** -> **Cookies**.
+3.  Copy all cookies and paste them into [notebooklm_cookies.json](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/notebooklm_cookies.json) in this directory.
 
 ## 💻 Usage
 

@@ -15,11 +15,9 @@ RESPONSE_SELECTOR = ".to-user-container .message-text-content"
 THINKING_SELECTOR = "div.thinking-message"
 
 class NotebookLMSession:
-    def __init__(self, headless=True):
+    def __init__(self, headless=True, executable_path=None):
         self.headless = headless
-        self.playwright = None
-        self.context = None
-        self.page = None
+        self.executable_path = executable_path
         self.playwright = None
         self.context = None
         self.page = None
@@ -33,12 +31,19 @@ class NotebookLMSession:
         print("🚀 Starting NotebookLM Browser Session...")
         self.playwright = sync_playwright().start()
         
-        self.context = self.playwright.chromium.launch_persistent_context(
-            user_data_dir=USER_DATA_DIR,
-            channel="chrome",
-            headless=self.headless,
-            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        )
+        launch_args = {
+            "user_data_dir": USER_DATA_DIR,
+            "headless": self.headless,
+            "user_agent": 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        
+        if self.executable_path:
+            launch_args["executable_path"] = self.executable_path
+            launch_args["channel"] = None # executable_path and channel are mutually exclusive
+        else:
+            launch_args["channel"] = "chrome"
+
+        self.context = self.playwright.chromium.launch_persistent_context(**launch_args)
         
         self._inject_cookies()
         self.page = self.context.new_page()

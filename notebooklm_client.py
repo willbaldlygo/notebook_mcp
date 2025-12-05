@@ -12,11 +12,12 @@ def main():
     parser.add_argument("--url", required=True, help="URL of the Notebook")
     parser.add_argument("--question", required=True, help="Question to ask")
     parser.add_argument("--visible", action="store_true", help="Show browser window")
+    parser.add_argument("--exe", help="Path to browser executable")
     
     args = parser.parse_args()
     
     # Initialize session
-    session = NotebookLMSession(headless=not args.visible)
+    session = NotebookLMSession(headless=not args.visible, executable_path=args.exe)
     
     print(f"💬 Asking: {args.question}")
     answer = session.query(args.url, args.question)
