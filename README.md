@@ -6,8 +6,8 @@ It uses a persistent, local browser session (via Playwright) to bypass the lack 
 
 ## ✨ Features
 *   **Zero-API Access**: Works with any Google account; no enterprise API required.
-*   **Warm Start**: Keeps a browser instance open in the background, making creating queries instant (after the first load).
-*   **Persistent Auth**: Uses standard browser cookies to maintain your session.
+*   **Automatic Auth**: Reads cookies directly from your Chrome browser — no manual export needed.
+*   **Warm Start**: Keeps a browser instance open in the background, making queries instant (after the first load).
 *   **MCP Compliant**: Works out-of-the-box with any MCP client.
 
 ## 🚀 Setup
@@ -24,14 +24,25 @@ pip install -r requirements.txt
 playwright install chromium
 ```
 
-### 2. Authentication (Manual Cookie Export)
-Since Google's security prevents automated headless logins, you must export your cookies:
+### 2. Authentication
+
+#### Automatic (Recommended)
+The tool automatically reads cookies from your Chrome browser:
 
 1.  Log in to [NotebookLM](https://notebooklm.google.com/) in your regular Chrome browser.
+2.  **Close Chrome** (required to read the cookie database).
+3.  Run the MCP server — cookies are extracted automatically!
+
+> **macOS Users**: On first run, you may be prompted to allow Keychain access. Click "Allow" to grant permission.
+
+#### Manual Fallback
+If automatic cookie reading fails (e.g., Chrome is open), you can still use manual export:
+
+1.  Log in to [NotebookLM](https://notebooklm.google.com/) in Chrome.
 2.  Open **DevTools** (Right-click -> Inspect) -> **Application** -> **Cookies**.
 3.  Select `https://notebooklm.google.com`.
 4.  Select all cookies (Cmd/Ctrl+A) and Copy (Cmd/Ctrl+C).
-5.  Paste them into `notebooklm_cookies.json` in this directory.
+5.  Run: `python3 update_cookies.py "PASTE_HERE"`
 
 > **Note**: Your `notebooklm_cookies.json` is git-ignored by default. Never commit it!
 
@@ -63,7 +74,8 @@ print(answer)
 ```
 
 ## ⚠️ Limitations
-*   **Session Expiry**: Google cookies expire every few weeks. If the tool stops working, re-export your cookies.
+*   **Session Expiry**: Google cookies expire every few weeks. If the tool stops working, log back into Chrome and restart.
+*   **Chrome Must Be Closed**: For automatic cookie reading, Chrome must be closed (database is locked while running).
 *   **Single Threaded**: The browser automation is not designed for high-concurrency requests.
 
 ## License

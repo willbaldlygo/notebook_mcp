@@ -4,10 +4,19 @@ import sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
+try:
+    import browser_cookie3
+    BROWSER_COOKIE3_AVAILABLE = True
+except ImportError:
+    BROWSER_COOKIE3_AVAILABLE = False
+
 # Configuration
 ARTIFACTS_DIR = Path("/Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f")
 COOKIES_FILE = ARTIFACTS_DIR / "notebooklm_cookies.json"
 USER_DATA_DIR = ARTIFACTS_DIR / "chrome_profile_mcp"
+
+# Domains to extract cookies for
+COOKIE_DOMAINS = ['.google.com', 'notebooklm.google.com', '.notebooklm.google.com']
 
 # Selectors
 INPUT_SELECTOR = "textarea.query-box-input"
@@ -50,21 +59,92 @@ class NotebookLMSession:
         print("✅ Browser Session Started.")
 
     def _inject_cookies(self):
-        if not COOKIES_FILE.exists():
-            print("ℹ️  No cookies file found. Relying on persistent profile.")
-            return
+        """Injects cookies into the browser context.
+
+        Priority order:
+        1. Try reading from Chrome browser directly (browser-cookie3)
+        2. Fall back to JSON file if Chrome reading fails
+        3. Rely on persistent profile if no cookies available
+        """
+        cookies_injected = False
+
+        # Method 1: Try reading from Chrome directly
+        chrome_cookies = self._get_cookies_from_chrome()
+        if chrome_cookies:
+            try:
+                self.context.add_cookies(chrome_cookies)
+                print(f"✅ Injected {len(chrome_cookies)} cookies from Chrome browser.")
+                cookies_injected = True
+            except Exception as e:
+                print(f"⚠️ Failed to inject Chrome cookies: {e}")
+
+        # Method 2: Fall back to JSON file
+        if not cookies_injected and COOKIES_FILE.exists():
+            try:
+                with open(COOKIES_FILE, 'r') as f:
+                    content = f.read()
+
+                valid_cookies = self.parse_cookies(content)
+                if valid_cookies:
+                    self.context.add_cookies(valid_cookies)
+                    print(f"✅ Injected {len(valid_cookies)} cookies from JSON file.")
+                    cookies_injected = True
+
+            except Exception as e:
+                print(f"⚠️ Warning: JSON cookie injection failed: {e}")
+
+        if not cookies_injected:
+            print("ℹ️  No cookies available. Relying on persistent profile.")
+
+    def _get_cookies_from_chrome(self):
+        """Reads Google cookies directly from Chrome's cookie database.
+
+        Returns a list of Playwright-compatible cookie dicts, or None if reading fails.
+        """
+        if not BROWSER_COOKIE3_AVAILABLE:
+            print("ℹ️  browser-cookie3 not installed. Skipping Chrome cookie extraction.")
+            return None
 
         try:
-            with open(COOKIES_FILE, 'r') as f:
-                content = f.read()
-                
-            valid_cookies = self.parse_cookies(content)
-            if valid_cookies:
-                self.context.add_cookies(valid_cookies)
-                print(f"DEBUG: Injected {len(valid_cookies)} cookies.")
-                
+            # Try to get cookies from Chrome
+            # Note: Chrome must be closed for this to work on some systems
+            cj = browser_cookie3.chrome(domain_name='.google.com')
+
+            cookies = []
+            for cookie in cj:
+                # Filter to only Google/NotebookLM related cookies
+                if not any(domain in cookie.domain for domain in COOKIE_DOMAINS):
+                    continue
+
+                # Convert to Playwright format
+                playwright_cookie = {
+                    "name": cookie.name,
+                    "value": cookie.value,
+                    "domain": cookie.domain,
+                    "path": cookie.path or "/",
+                    "secure": cookie.secure,
+                    "sameSite": "Lax"  # Default, browser-cookie3 doesn't expose this
+                }
+
+                # Handle expiry (Playwright expects seconds since epoch or -1 for session)
+                if cookie.expires:
+                    playwright_cookie["expires"] = cookie.expires
+
+                cookies.append(playwright_cookie)
+
+            if cookies:
+                print(f"🍪 Found {len(cookies)} Google cookies in Chrome.")
+                return cookies
+            else:
+                print("ℹ️  No Google cookies found in Chrome.")
+                return None
+
+        except PermissionError:
+            print("⚠️ Chrome browser is open. Close Chrome to read cookies, or use JSON fallback.")
+            return None
         except Exception as e:
-            print(f"⚠️ Warning: Cookie injection failed: {e}")
+            print(f"⚠️ Could not read Chrome cookies: {e}")
+            return None
 
     @staticmethod
     def parse_cookies(content):
