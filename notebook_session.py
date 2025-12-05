@@ -57,64 +57,90 @@ class NotebookLMSession:
         try:
             with open(COOKIES_FILE, 'r') as f:
                 content = f.read()
-                if "/*" in content: content = content.split("/*")[0] # strip comments
                 
-                cookies = []
-                try:
-                    cookies = json.loads(content)
-                except json.JSONDecodeError:
-                    # TSV Fallback
-                    lines = content.strip().split('\n')
-                    for line in lines:
-                        if not line.strip(): continue
-                        parts = line.split('\t')
-                        if len(parts) < 2: continue
-                        
-                        name = parts[0].strip()
-                        value = parts[1].strip()
-                        domain = parts[2].strip() if len(parts) > 2 else ".google.com"
-                        path = parts[3].strip() if len(parts) > 3 else "/"
-                        if not path: path = "/"
-                        if not domain: domain = ".google.com"
-                        if ("notebooklm.google.com" in domain or "google.com" in domain) and not domain.startswith("."):
-                            domain = "." + domain
-                            
-                        # Secure/SameSite logic
-                        secure = False
-                        if len(parts) > 7:
-                            val = parts[7].strip().lower()
-                            if val == '✓' or val == 'true': secure = True
-                        if name.startswith("__Secure-") or name.startswith("__Host-"): secure = True
-                        
-                        same_site = "Lax"
-                        if len(parts) > 8:
-                            val = parts[8].strip()
-                            if val in ["Strict", "Lax", "None"]: same_site = val
-                        if same_site == "None": secure = True
-
-                        if name and value:
-                            cookies.append({
-                                "name": name, "value": value, "domain": domain, 
-                                "path": path, "secure": secure, "sameSite": same_site
-                            })
-
-                valid_cookies = []
-                for c in cookies:
-                    if c.get("name") == "PASTE_YOUR_COOKIES_HERE": continue
-                    valid_cookies.append({
-                        "name": c["name"],
-                        "value": c["value"],
-                        "domain": c.get("domain", ".google.com"),
-                        "path": c.get("path", "/"),
-                        "secure": c.get("secure", True),
-                        "sameSite": c.get("sameSite", "Lax")
-                    })
-                
+            valid_cookies = self.parse_cookies(content)
+            if valid_cookies:
                 self.context.add_cookies(valid_cookies)
                 print(f"DEBUG: Injected {len(valid_cookies)} cookies.")
-
+                
         except Exception as e:
             print(f"⚠️ Warning: Cookie injection failed: {e}")
+
+    @staticmethod
+    def parse_cookies(content):
+        """Parses raw text (JSON or TSV) into Playwright-compatible cookie list."""
+        if "/*" in content: content = content.split("/*")[0] # strip comments
+        
+        cookies = []
+        try:
+            cookies = json.loads(content)
+        except json.JSONDecodeError:
+            # TSV Fallback
+            lines = content.strip().split('\n')
+            for line in lines:
+                if not line.strip(): continue
+                parts = line.split('\t')
+                if len(parts) < 2: continue
+                
+                name = parts[0].strip()
+                value = parts[1].strip()
+                domain = parts[2].strip() if len(parts) > 2 else ".google.com"
+                path = parts[3].strip() if len(parts) > 3 else "/"
+                if not path: path = "/"
+                if not domain: domain = ".google.com"
+                if ("notebooklm.google.com" in domain or "google.com" in domain) and not domain.startswith("."):
+                    domain = "." + domain
+                    
+                # Secure/SameSite logic
+                secure = False
+                if len(parts) > 7:
+                    val = parts[7].strip().lower()
+                    if val == '✓' or val == 'true': secure = True
+                if name.startswith("__Secure-") or name.startswith("__Host-"): secure = True
+                
+                same_site = "Lax"
+                if len(parts) > 8:
+                    val = parts[8].strip()
+                    if val in ["Strict", "Lax", "None"]: same_site = val
+                if same_site == "None": secure = True
+
+                if name and value:
+                    cookies.append({
+                        "name": name, "value": value, "domain": domain, 
+                        "path": path, "secure": secure, "sameSite": same_site
+                    })
+
+        valid_cookies = []
+        for c in cookies:
+            if c.get("name") == "PASTE_YOUR_COOKIES_HERE": continue
+            valid_cookies.append({
+                "name": c["name"],
+                "value": c["value"],
+                "domain": c.get("domain", ".google.com"),
+                "path": c.get("path", "/"),
+                "secure": c.get("secure", True),
+                "sameSite": c.get("sameSite", "Lax")
+            })
+        return valid_cookies
+
+    @staticmethod
+    def save_cookies(raw_text):
+        """Validates and saves raw cookie text to the storage file."""
+        # Validate first
+        try:
+            cookies = NotebookLMSession.parse_cookies(raw_text)
+            if not cookies:
+                return False, "No valid cookies found in text."
+            
+            # Save if valid
+            # We save the *original* text to preserve format (JSON/TSV) if user prefers,
+            # OR we could save the parsed JSON. Saving parsed JSON is safer/cleaner.
+            with open(COOKIES_FILE, 'w') as f:
+                json.dump(cookies, f, indent=2)
+                
+            return True, f"Successfully saved {len(cookies)} cookies."
+        except Exception as e:
+            return False, str(e)
 
     def query(self, url, question):
         """Navigates to the notebook (if needed) and asks a question."""
