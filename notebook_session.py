@@ -20,11 +20,10 @@ class NotebookLMSession:
         self.playwright = None
         self.context = None
         self.page = None
-        self._check_cookies()
-
-    def _check_cookies(self):
-        if not COOKIES_FILE.exists():
-            raise FileNotFoundError(f"Cookies file not found at {COOKIES_FILE}")
+        self.playwright = None
+        self.context = None
+        self.page = None
+        # self._check_cookies() # No longer strict requirement
 
     def start(self):
         """Starts the persistent browser session if not already running."""
@@ -46,6 +45,10 @@ class NotebookLMSession:
         print("✅ Browser Session Started.")
 
     def _inject_cookies(self):
+        if not COOKIES_FILE.exists():
+            print("ℹ️  No cookies file found. Relying on persistent profile.")
+            return
+
         try:
             with open(COOKIES_FILE, 'r') as f:
                 content = f.read()
