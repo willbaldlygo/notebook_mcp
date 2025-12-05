@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# Environment Variables & Secrets
+.env
+*.env
+
+# NotebookLM Specific (CRITICAL)
+# These files contain your personal session cookies and browser profile.
+# DO NOT COMMIT THESE TO GITHUB.
+notebooklm_cookies.json
+notebooklm_auth.json
+chrome_profile/
+chrome_profile_mcp/
+
+# Debug output
+*.png
+debug_*.log
+
+# Mac
+.DS_Store

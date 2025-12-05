@@ -1,0 +1,40 @@
+# NotebookLM Client Implementation Plan
+
+## Goal
+Enable "Antigravity" to query the user's Google NotebookLM notebooks by replicating the browser automation and cookie injection strategy from the `notebooklm-skill` repository.
+
+## Safety & Security Note
+> [!IMPORTANT]
+> **Safety**: This process is safe because:
+> 1.  **Local Execution**: The script runs entirely on your local machine. No credentials or cookies are ever sent to me (the AI) or any external server.
+> 2.  **User Control**: You log in manually through Google's official login page. The script merely saves the "session cookie" locally so it can use it later.
+> 3.  **Browser Control**: You are correct that I can launch and control a browser. That is exactly what this script does—it uses Playwright (a browser automation tool) to launch a controllable Chrome instance. This script is simply the "driver" I use to perform that action on your local machine.
+
+## User Review Required
+> [!IMPORTANT]
+> **Manual Cookie Export**: Since Google blocked the automated browser login, you will need to manually export your cookies from your regular Chrome browser. This is usually a one-time process, but you may need to repeat it if you log out or if the cookies expire (typically after a few weeks/months).
+
+## Proposed Changes
+
+### [NEW] `notebooklm_cookies.json`
+Create a placeholder JSON file. The user will manually copy their cookies from their browser devtools and paste them here.
+
+### [MODIFY] [notebooklm_client.py](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/notebooklm_client.py)
+Update the client to read from `notebooklm_cookies.json` instead of `notebooklm_auth.json`. It will need to handle the standard JSON format exported by browser tools (list of cookie objects).
+
+### [NEW] [notebooklm_client.py](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/notebooklm_client.py)
+Create a Python script that uses the saved `notebooklm_auth.json` to:
+1.  Launch a **headless** browser context.
+2.  Load state from `notebooklm_auth.json`.
+3.  Navigate to the Notebook URL.
+4.  Interact with the query interface.
+
+
+## Verification Plan
+
+### User Verification
+1.  **Run Setup**: Run `python3 auth_setup.py`.
+2.  **Action**: A Chrome window opens. Log in to your Google account.
+3.  **Result**: Script saves `notebooklm_auth.json`.
+4.  **Run Query**: Run `python3 notebooklm_client.py --url "..." --question "..."`.
+5.  **Success**: Script returns answer without asking for login.

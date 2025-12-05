@@ -1,0 +1,12 @@
+# Task Checklist
+
+- [ ] Investigate `notebooklm-skill` and `notebooklm-mcp` repositories <!-- id: 0 -->
+    - [ ] Read README of `notebooklm-skill` <!-- id: 1 -->
+    - [ ] Read README of `notebooklm-mcp` <!-- id: 2 -->
+    - [ ] Analyze the code (if accessible via web search or if I can clone them) to understand the API endpoints and auth mechanism <!-- id: 3 -->
+- [ ] Determine feasibility in the current environment <!-- id: 4 -->
+    - [ ] Can we run the required scripts? <!-- id: 5 -->
+    - [ ] How will the user provide cookies? <!-- id: 6 -->
+- [ ] Create an Implementation Plan (if feasible) <!-- id: 7 -->
+- [ ] Implement the solution (create script/tool) <!-- id: 8 -->
+- [ ] Verify connectivity <!-- id: 9 -->

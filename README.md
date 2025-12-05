@@ -1,0 +1,69 @@
+# NoteBook MCP
+
+An **MCP (Model Context Protocol)** server that enables AI agents (like Claude Desktop) to query your personal **Google NotebookLM** notebooks.
+
+It uses a persistent, local browser session (via Playwright) to bypass the lack of an official API, allowing for "warm start" instant queries.
+
+## ✨ Features
+*   **Zero-API Access**: Works with any Google account; no enterprise API required.
+*   **Warm Start**: Keeps a browser instance open in the background, making creating queries instant (after the first load).
+*   **Persistent Auth**: Uses standard browser cookies to maintain your session.
+*   **MCP Compliant**: Works out-of-the-box with any MCP client.
+
+## 🚀 Setup
+
+### 1. Installation
+Clone this repository and install dependencies:
+
+```bash
+git clone https://github.com/your-username/notebook-mcp.git
+cd notebook-mcp
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+playwright install chromium
+```
+
+### 2. Authentication (Manual Cookie Export)
+Since Google blocks automated logins, you must export your cookies once:
+1.  Log in to [NotebookLM](https://notebooklm.google.com/) in your regular Chrome browser.
+2.  Open **DevTools** (Right-click -> Inspect) -> **Application** -> **Cookies**.
+3.  Select `https://notebooklm.google.com`.
+4.  Select all cookies (Cmd/Ctrl+A) and Copy (Cmd/Ctrl+C).
+5.  Paste them into a new file named `notebooklm_cookies.json` in this directory.
+
+> **Note**: Your `notebooklm_cookies.json` is git-ignored by default. Never commit it!
+
+## 💻 Usage
+
+### As an MCP Server (Claude Desktop)
+Add this to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "notebooklm": {
+      "command": "/absolute/path/to/notebook-mcp/.venv/bin/python3",
+      "args": ["/absolute/path/to/notebook-mcp/server.py"]
+    }
+  }
+}
+```
+
+### As a Library
+You can use the session manager in your own Python scripts:
+
+```python
+from notebook_session import NotebookLMSession
+
+session = NotebookLMSession(headless=True)
+answer = session.query("https://notebooklm.google.com/notebook/...", "Summarize this doc")
+print(answer)
+```
+
+## ⚠️ Limitations
+*   **Session Expiry**: Google cookies expire every few weeks. If the tool stops working, re-export your cookies.
+*   **Single Threaded**: The browser automation is not designed for high-concurrency requests.
+
+## License
+MIT

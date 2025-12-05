@@ -1,0 +1,26 @@
+# Task Checklist
+
+- [x] Investigate `notebooklm-skill` and `notebooklm-mcp` repositories <!-- id: 0 -->
+    - [x] Read README of `notebooklm-skill` <!-- id: 1 -->
+    - [x] Read README of `notebooklm-mcp` <!-- id: 2 -->
+    - [x] Analyze the code (if accessible via web search or if I can clone them) to understand the API endpoints and auth mechanism <!-- id: 3 -->
+- [x] Determine feasibility in the current environment <!-- id: 4 -->
+    - [x] Can we run the required scripts? <!-- id: 5 -->
+    - [x] How will the user provide cookies? <!-- id: 6 -->
+- [x] Create an Implementation Plan (if feasible) <!-- id: 7 -->
+- [x] Implement the solution (create script/tool) <!-- id: 8 -->
+- [x] Verify connectivity <!-- id: 9 -->
+
+## Phase 2: NoteBook MCP (MCP Server)
+- [x] Create Implementation Plan for MCP Server <!-- id: 10 -->
+- [x] Install `mcp` dependency <!-- id: 11 -->
+- [x] Refactor client logic into [NotebookLMSession](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/notebook_session.py#17-154) class (persistent browser) <!-- id: 12 -->
+- [x] Implement [server.py](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/server.py) (MCP Tools & Resources) <!-- id: 13 -->
+- [x] Verify MCP Server (using inspection tool or test script) <!-- id: 14 -->
+
+## Phase 3: Open Source Preparation
+- [x] Create [.gitignore](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/.gitignore) (CRITICAL) <!-- id: 15 -->
+- [x] Create [README.md](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/README.md) <!-- id: 16 -->
+- [x] Create [LICENSE](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/LICENSE) <!-- id: 17 -->
+- [x] Generate [requirements.txt](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/requirements.txt) <!-- id: 18 -->
+- [x] Final Code Cleanup (remove debug prints/files) <!-- id: 19 -->

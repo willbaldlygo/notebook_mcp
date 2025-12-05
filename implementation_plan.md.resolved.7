@@ -1,0 +1,45 @@
+# NoteBook MCP: Server Implementation Plan
+
+## Goal
+Elevate the NotebookLM integration from a "cold-start" script to a "warm" **Model Context Protocol (MCP)** server. This will allow for instant queries, persistent browser sessions, and deeper integration with AI agents.
+
+## User Review Required
+> [!IMPORTANT]
+> **New Dependency**: This implementation requires the `mcp` Python package. I will need permission to install it via pip: `pip install mcp`.
+
+## Proposed Architecture
+
+### 1. Core Logic Refactor (`notebooklm_core.py`)
+Encapsulate the Playwright logic into a [NotebookLMSession](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/notebook_session.py#17-154) class.
+- **Why?**: The current script opens/closes the browser for every single query. The Class will keep `self.browser` and `self.page` open between calls, making subsequent queries instantaneous.
+- **Method**: `ensure_active_session()` checks if the browser is alive; if not, launches it.
+
+### 2. MCP Server Entrypoint ([server.py](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/server.py))
+Implement the standard MCP protocol using the FastMCP SDK (or standard SDK).
+- **Tool**: [query_notebook(url, question)](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/notebooklm_client.py#24-199) - The primary interaction.
+- **Resource**: `notebooklm://active_session` - JSON status of the browser (is it open? logged in?).
+- **Startup**: When the server starts, it silently launches the browser in the background and injects the cookies.
+
+## Verification Plan
+
+### Automated Test
+Create a `test_mcp_client.py` that simulates an MCP client sending a JSON-RPC request to the server.
+1.  Start [server.py](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/server.py) in background.
+2.  Send `call_tool("query_notebook", ...)` request.
+3.  Assert response contains valid text.
+
+## Phase 3: Open Source Preparation
+> [!NOTE]
+> **Goal**: Package the project for GitHub distribution.
+
+### 1. Cleanup
+- Isolate clean python files: [server.py](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/server.py), [notebook_session.py](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/notebook_session.py), [auth_setup.py](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/auth_setup.py).
+- Delete debug images.
+
+### 2. Documentation
+- Create [README.md](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/temp_notebooklm_skill/README.md) (Project overview, Setup, Usage)
+- Create [LICENSE](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/temp_notebooklm_skill/LICENSE) (MIT)
+- Create [.gitignore](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/temp_notebooklm_skill/.gitignore) (Exclude cookies, profiles, venv)
+
+### 3. Dependencies
+- Generate [requirements.txt](file:///Users/will/.gemini/antigravity/brain/6ac700d1-78b2-4ef1-81e7-d60101a71d0f/temp_notebooklm_skill/requirements.txt) (`mcp`, `playwright`).
